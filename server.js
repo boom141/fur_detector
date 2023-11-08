@@ -1,4 +1,5 @@
 import express from 'express';
+import fileUpload from 'express-fileupload';
 import cors from 'cors';
 import http from 'http';
 import { Server } from 'socket.io';
@@ -9,6 +10,7 @@ const port = process.env.PORT || 5000
 
 const startServer = () =>{
     app.use(cors());
+    app.use(fileUpload());
     app.use(express.urlencoded({extended: true}));
     app.use(express.json());
 
@@ -18,26 +20,32 @@ const startServer = () =>{
           origin: '*',
           methods: ["GET", "POST"],
         },
-      });
+      }); 
       
     // Approach 1: class for socket namespace 
 
     io.on('connection', socket =>{
-        console.log(`['USER CONNECTED'] id: ${socket.id}`)
+        console.log(`[USER CONNECTED] id: ${socket.id}`)
 
 
-        socket.on('test', (req)  =>{
-          socket.broadcast.emit('test', req)
+        socket.on('manual_control', (req)  =>{
+          const mime_type = 'data:image/jpg;base64,';
+          const image_src = mime_type + req.file;
+
+          socket.broadcast.emit('manual_control', {frame_src: image_src});
         })
 
         socket.on('disconnect', () =>{
-        console.log(`User is disconnected to ${socket.id}`)
+        console.log(`[USER DISCONNECTED] id: ${socket.id}`)
 
         });
     });
     
     app.get('/', function(req, res){
       res.send("hello world");
+    });
+    app.post('/test', function(req, res){
+      res.send({data: 'recieved'});
     });
 
     server.listen(port, ()=>{
