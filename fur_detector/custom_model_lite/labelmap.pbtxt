@@ -1,0 +1,30 @@
+item {
+  id: 1
+  name: 'Gray'
+}
+
+item {
+  id: 2
+  name: 'Black'
+}
+
+item {
+  id: 3
+  name: 'Beige'
+}
+
+item {
+  id: 4
+  name: 'White'
+}
+
+item {
+  id: 5
+  name: 'Light brown'
+}
+
+item {
+  id: 6
+  name: 'Golden brown'
+}
+

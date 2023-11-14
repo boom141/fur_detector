@@ -22,11 +22,8 @@ const startServer = () =>{
         },
       }); 
       
-    // Approach 1: class for socket namespace 
-
     io.on('connection', socket =>{
         console.log(`[USER CONNECTED] id: ${socket.id}`)
-
 
         socket.on('manual_control', (req)  =>{
           const mime_type = 'data:image/jpg;base64,';
