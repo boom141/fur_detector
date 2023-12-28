@@ -1,0 +1,2 @@
+        # image_buffer = cv.imencode('.jpg', frame)[1]
+        # image_data = base64.b64encode(image_buffer)

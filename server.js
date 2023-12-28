@@ -8,6 +8,9 @@ const app = express();
 const server = http.createServer(app);
 const port = process.env.PORT || 5000
 
+const authenticated_devices = []
+
+
 const startServer = () =>{
     app.use(cors());
     app.use(fileUpload());
@@ -25,6 +28,13 @@ const startServer = () =>{
     io.on('connection', socket =>{
         console.log(`[USER CONNECTED] id: ${socket.id}`)
 
+        socket.on('authenticate_device', (req) =>{
+          if(req.access_token){
+            authenticated_devices.push(req)
+            console.log(authenticated_devices)
+          }
+        })
+
         socket.on('manual_control', (req)  =>{
           const mime_type = 'data:image/jpg;base64,';
           const image_src = mime_type + req.file;
@@ -33,8 +43,7 @@ const startServer = () =>{
         })
 
         socket.on('disconnect', () =>{
-        console.log(`[USER DISCONNECTED] id: ${socket.id}`)
-
+            console.log(`[USER DISCONNECTED] id: ${socket.id}`)
         });
     });
     
