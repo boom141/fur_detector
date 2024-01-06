@@ -42,6 +42,11 @@ const startServer = () =>{
           socket.broadcast.emit('manual_control', {frame_src: image_src});
         })
 
+        socket.on('requestControl', data =>{
+          socket.broadcast.emit('scannerController', data);
+        })
+
+
         socket.on('disconnect', () =>{
             console.log(`[USER DISCONNECTED] id: ${socket.id}`)
         });
