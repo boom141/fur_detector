@@ -9,7 +9,8 @@ def create_config():
         "access_token":  secrets.token_urlsafe(),
         "device_id": str(time.time()).split('.')[0],
         "name": 'Binbong cleaner',
-        "type": 'device'
+        "type": 'device',
+        "user": None
     }
 
     if not os.path.exists(config_file):

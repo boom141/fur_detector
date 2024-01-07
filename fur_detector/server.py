@@ -1,12 +1,16 @@
 import base64, cv2 as cv
 from flask import Flask, request
+from flask_cors import CORS
 from flask_socketio import SocketIO
 from werkzeug.utils import secure_filename
 from coreFunc.detectorBot import TfLiteModel
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-sio = SocketIO(app)
+CORS(app)
+sio = SocketIO(app, cors_allowed_origins='*')
+
+devices = [{'name': 'sample device'}]
 
 imagePath = 'imageUpload'
 model = TfLiteModel(model='custom_model_lite/detect.tflite',
@@ -21,6 +25,7 @@ def generateDetections(image):
 @sio.event
 def connect():
     print(f'[CONNECTED] User id: {request.sid}')
+    sio.emit('getConnectedVaccum', devices, include_self=True)
 
 
 @sio.event
@@ -44,7 +49,7 @@ def disconnect():
 
 
 if __name__ == '__main__':
-    sio.run(app, host='0.0.0.0', port=3055)
+    sio.run(app, debug=True, host='0.0.0.0', port=3055)
 
 
 
