@@ -16,9 +16,12 @@ def create_config():
     if not os.path.exists(config_file):
         with open(config_file, 'w') as file:
             json.dump(config, file)
-        
-        print('[SUCCESSFUL]: Config file created')
     else:
-        print('[CANCELLED]: Config file existing')
+        existingConfig = dict()
+        with open(config_file, 'r') as file:
+            existingConfig = json.load(file)
+
+            return existingConfig
+   
 
     return config
