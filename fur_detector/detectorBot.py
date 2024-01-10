@@ -7,8 +7,8 @@ class TfLiteModel:
     def __init__(self,model,label):
         self.model = model
         self.label = label
-        self.filterName = ['White', 'Black', 'Gray', 'Beige']
-        self.margin = (295,345)
+        self.filterName = ['White', 'Black', 'Gray']
+        self.margin = (285,355)
 
         liteIntepreter = importlib.util.find_spec('tflite_runtime')
         if liteIntepreter:
@@ -20,7 +20,7 @@ class TfLiteModel:
 
         self.tfInterpreter = Interpreter
 
-    def detect_frame(self,img_data,min_conf=0.5):
+    def detect_frame(self,img_data,min_conf=0.3):
 
         # Load the label map into memory
         with open(self.label, 'r') as f:
@@ -61,6 +61,7 @@ class TfLiteModel:
         classes = interpreter.get_tensor(output_details[3]['index'])[0] # Class index of detected objects
         scores = interpreter.get_tensor(output_details[0]['index'])[0] # Confidence of detected objects
 
+        print(scores[0])
         if ((scores[0] > min_conf) and (scores[0] <= 1.0)):
             # Get bounding box coordinates and draw box
             # Interpreter can return coordinates that are outside of image dimensions, need to force them to be within image using max() and min()
@@ -72,6 +73,7 @@ class TfLiteModel:
 
 
             # Draw label
+            
             object_name = labels[int(classes[0])] # Look up object name from "labels" array using class index
             if object_name not in self.filterName:
                 # cv2.rectangle(image, (xmin,ymin), (xmax,ymax), (10, 255, 0), 2)

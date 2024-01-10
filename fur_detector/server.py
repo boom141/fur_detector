@@ -3,7 +3,7 @@ from flask import Flask, request
 from flask_cors import CORS
 from flask_socketio import SocketIO, join_room
 from werkzeug.utils import secure_filename
-from coreFunc.detectorBot import TfLiteModel
+from detectorBot import TfLiteModel
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -55,30 +55,23 @@ def connect():
 @sio.event
 def authenticateVaccum(data):
     savedDevices = readDeviceList()
-    if not checkDuplicateVaccum(data['device_id'],savedDevices['devices']):
-        savedDevices['devices'].append(data)
-        saveDeviceList(savedDevices)
-
-    savedDevices = readDeviceList()
-    if not checkDuplicateVaccum(savedDevices['devices'][0]['device_id'],devices):
-        if savedDevices['devices'][0]['user'] is None:
-            data['sessionId'] = request.sid
+    if not savedDevices['devices']:
+        if not checkDuplicateVaccum(data['device_id'],devices):
             devices.append(data)
-    else:
-        devices[0]['sessionId'] = request.sid
 
     sio.emit('initVaccumList', devices, include_self=True)
     print(devices)
 
 @sio.event
 def vaccumUserAuth(data):
+    global devices
     savedDevices = readDeviceList()
-    for vaccum in savedDevices['devices']:
-        if vaccum['device_id'] == data['device']['device_id']:
-            vaccum['user'] = data['user']
-            saveDeviceList(savedDevices)
-            removeVaccum(vaccum['device_id'])
-    
+    data['device']['user'] = data['user']
+    savedDevices['devices'] = [data['device']]
+    saveDeviceList(savedDevices)
+
+    devices = []
+    print('application device connected')
     print(devices)
 
 @sio.event
@@ -90,6 +83,10 @@ def initManualControl():
 def initFrame(data):
     sio.emit('viewFrame', data)
     
+@sio.event
+def initScanner(data):
+    sio.emit('startScanner', data)
+
 
 @sio.event
 def furDetection(dataBuffer):
@@ -104,11 +101,26 @@ def furDetection(dataBuffer):
 
     sio.emit('controlRequest', result, include_self=True)
 
+@sio.event
+def requestManualMove(data):
+    sio.emit('manualMove', data)
+
+@sio.event
+def disconnectVaccum(data):
+    global devices
+    savedDevices = readDeviceList()
+    print('reaactivate')
+    savedDevices['devices'] = []
+    devices = [data]
+
+    saveDeviceList(savedDevices)
+    print(devices)
 
 @sio.event
 def disconnect():
+    global devices
     print(f'[DISCONNECTED] User id: {request.sid}')
-    removeVaccum(request.sid)
+    devices = []
     sio.emit('initVaccumList', devices)
     print(f'Number of devices #{len(devices)}')
 

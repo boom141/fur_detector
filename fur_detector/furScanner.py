@@ -1,15 +1,14 @@
 import socketio, time
 import cv2 as cv
 from coreFunc.streaming import Vision
-# from coreFunc.controller import Mobility
+from coreFunc.controller import Mobility
 from coreFunc.genConfig import create_config
 
 sio = socketio.Client()
-# mobility = Mobility()
+mobility = Mobility()
 prevDir = 0
 endStream = False
 
-deviceConfig = create_config()
 
 def streamingFrame(eventName):
 	vision = Vision()
@@ -20,37 +19,59 @@ def streamingFrame(eventName):
 @sio.event
 def connect():
 	print('[CONNECTED] server connected')
-	# mainLoop('furDetection')
+	
 
 @sio.event
 def requestVaccumData():
+	deviceConfig = create_config()
 	sio.emit('authenticateVaccum', deviceConfig)
 
+@sio.event
+def startScanner(data):
+	global endStream
+	if data:
+		endStream = False
+		streamingFrame('furDetection')
+	else:
+		endStream = True
 
 @sio.event()
 def startStreaming():
 	streamingFrame('initFrame')
 
-# @sio.event
-# def controlRequest(data):
-# 	global prevDir
-# 	mobility.stop()
-# 	if (data['status'] == 200 and 
-# 	 	data['frameLocation'] != prevDir):
-# 		if data['frameLocation'] == 1:
-# 			print('left')
-# 			mobility.moveLeft()
-# 		if data['frameLocation'] == 0:
-# 			print('center')
-# 			mobility.stop()
-# 		if data['frameLocation'] == 2:
-# 			print('right')
-# 			mobility.moveRight()
+@sio.event()
+def manualMove(data):
+	if data == 'forward':
+		mobility.moveForward()
+	elif data == 'backward':
+		mobility.moveBackward()
+	elif data == 'left':
+		mobility.moveLeft()
+	elif data == 'right':
+		mobility.moveRight()
+	elif data == 'stop':
+		mobility.stop()
 
-# 		prevDir = data['frameLocation']
+
+@sio.event
+def controlRequest(data):
+	global prevDir
+	mobility.stop()
+	if (data['status'] == 200 and 
+	 	data['frameLocation'] != prevDir):
+		if data['frameLocation'] == 1:
+			mobility.moveLeft()
+		if data['frameLocation'] == 0:
+			mobility.stop()
+		if data['frameLocation'] == 2:
+			mobility.moveRight()
+
+		prevDir = data['frameLocation']
 	
-# 	mainLoop('furDetection')
-
+	if endStream == False:
+		streamingFrame('furDetection')
+	else:
+		print('scanner stopped')
 
 sio.connect('http://192.168.1.21:3055')
 sio.wait()

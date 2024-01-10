@@ -20,7 +20,6 @@ class Mobility:
 		sleep(delay)
   
 	def moveLeft(self,delay=defaultDelay):
-		print(delay)
 		self.vaccum.left()
 		sleep(delay)
 
