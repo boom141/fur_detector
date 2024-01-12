@@ -29,9 +29,9 @@ def saveDeviceList(deviceList):
         json.dump(deviceList, file)
 
 
-def generateDetections(image):
+def generateDetections(image,threshold):
     image = cv.imread(image)
-    return model.detect_frame(image)
+    return model.detect_frame(image,min_conf=threshold)
 
 def checkDuplicateVaccum(id,list):
     if devices:
@@ -45,6 +45,16 @@ def removeVaccum(id):
         for vaccum in devices:
             if vaccum['sessionId'] == id:
                 devices.remove(vaccum)
+
+def decodeFrame(data):
+    image_type = base64.b64decode(data)
+
+    filename = secure_filename('sample.jpg')
+    with open( 'imageUpload/'+ filename, 'wb') as output:
+        output.write(image_type)
+
+    return filename
+
 
 @sio.event
 def connect():
@@ -90,16 +100,19 @@ def initScanner(data):
 
 @sio.event
 def furDetection(dataBuffer):
-    image_type = base64.b64decode(dataBuffer)
-
-    filename = secure_filename('sample.jpg')
-    with open( 'imageUpload/'+ filename, 'wb') as output:
-        output.write(image_type)
-
-    result = generateDetections(f'{imagePath}/{filename}')
+    filename = decodeFrame(dataBuffer)
+    result = generateDetections(f'{imagePath}/{filename}',0.3)
     print(result)
 
     sio.emit('controlRequest', result, include_self=True)
+
+@sio.event
+def initRoaming(dataBuffer):
+    filename = decodeFrame(dataBuffer)
+    result = generateDetections(f'{imagePath}/{filename}',0.08)
+    print(result)
+
+    sio.emit('roamingScanner', result, include_self=True)
 
 @sio.event
 def requestManualMove(data):
